@@ -18,28 +18,19 @@ pub enum Task {
     DockerCompose {
         #[serde(flatten)]
         common: CommonTask,
-        #[serde(default, skip_serializing_if = "is_default")]
-        compose_file: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        compose_file: Option<String>,
     },
-}
-
-fn is_default<T: Default + PartialEq>(t: &T) -> bool {
-    *t == Default::default()
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
 pub struct CommonTask {
-    #[serde(default, skip_serializing_if = "is_default")]
-    name: String,
-    #[serde(default, skip_serializing_if = "is_default")]
-    retries: u8,
-}
-
-impl CommonTask {
-    #[cfg(test)]
-    pub fn new() -> Self {
-        Default::default()
-    }
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    name: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    retries: Option<u8>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    timeout: Option<String>,
 }
 
 impl Manifest {
@@ -69,6 +60,7 @@ mod tests {
           script: ./build
         - type: run
           script: ./test
+          name: ''
         - type: docker-compose
         ";
 
@@ -78,18 +70,21 @@ mod tests {
             tasks: vec![
                 Task::Run {
                     common: CommonTask {
-                        name: "build".to_string(),
+                        name: Some("build".to_string()),
                         ..Default::default()
                     },
                     script: "./build".to_string(),
                 },
                 Task::Run {
-                    common: CommonTask::new(),
+                    common: CommonTask {
+                        name: Some("".to_string()),
+                        ..Default::default()
+                    },
                     script: "./test".to_string(),
                 },
                 Task::DockerCompose {
-                    common: CommonTask::new(),
-                    compose_file: "".to_string(),
+                    common: Default::default(),
+                    compose_file: None,
                 },
             ],
         };
