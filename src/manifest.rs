@@ -1,20 +1,27 @@
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug, PartialEq)]
-pub struct Task {
-    #[serde(rename = "type")]
-    pub typ: String,
-    #[serde(default)]
-    pub name: String,
-    #[serde(default)]
-    pub command: String,
-}
-
-#[derive(Deserialize, Debug, PartialEq)]
 pub struct Manifest {
     pub pipeline: String,
     pub team: String,
     pub tasks: Vec<Task>,
+}
+
+#[derive(Deserialize, Debug, PartialEq)]
+#[serde(tag = "type")]
+#[serde(rename_all = "kebab-case")]
+pub enum Task {
+    Run {
+        #[serde(default)]
+        name: String,
+        command: String,
+    },
+    DockerCompose {
+        #[serde(default)]
+        name: String,
+        #[serde(default)]
+        compose_file: String,
+    },
 }
 
 impl Manifest {
@@ -34,25 +41,29 @@ mod tests {
         pipeline: my-pipe
         team: my-team
         tasks: 
-        - type: task-type
-          name: task-name
-          command: task-command
-        - type: task-type2
+        - type: run
+          name: build
+          command: ./build
+        - type: run
+          command: ./test
+        - type: docker-compose
         ";
 
         let expected = Manifest {
             pipeline: "my-pipe".to_string(),
             team: "my-team".to_string(),
             tasks: vec![
-                Task {
-                    typ: "task-type".to_string(),
-                    name: "task-name".to_string(),
-                    command: "task-command".to_string(),
+                Task::Run {
+                    name: "build".to_string(),
+                    command: "./build".to_string(),
                 },
-                Task {
-                    typ: "task-type2".to_string(),
+                Task::Run {
                     name: "".to_string(),
-                    command: "".to_string(),
+                    command: "./test".to_string(),
+                },
+                Task::DockerCompose {
+                    name: "".to_string(),
+                    compose_file: "".to_string(),
                 },
             ],
         };
