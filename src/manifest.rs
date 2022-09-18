@@ -48,9 +48,9 @@ mod tests {
         tasks: 
         - type: run
           name: build
-          command: ./build
+          script: ./build
         - type: run
-          command: ./test
+          script: ./test
         - type: docker-compose
         ";
 
