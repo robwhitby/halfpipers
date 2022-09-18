@@ -3,6 +3,7 @@ mod manifest;
 use clap::Parser;
 use manifest::Manifest;
 use std::error::Error;
+use std::fs::read_to_string;
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -19,7 +20,7 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let raw_manifest = std::fs::read_to_string(&args.path)?;
+    let raw_manifest = read_to_string(&args.path)?;
     let manifest = Manifest::from_yaml(&raw_manifest)?;
     let yaml = manifest.to_yaml()?;
 

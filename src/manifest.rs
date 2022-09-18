@@ -8,20 +8,38 @@ pub struct Manifest {
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
-#[serde(tag = "type")]
-#[serde(rename_all = "kebab-case")]
+#[serde(tag = "type", rename_all = "kebab-case")]
 pub enum Task {
     Run {
-        #[serde(default)]
-        name: String,
+        #[serde(flatten)]
+        common: CommonTask,
         script: String,
     },
     DockerCompose {
-        #[serde(default)]
-        name: String,
-        #[serde(default)]
+        #[serde(flatten)]
+        common: CommonTask,
+        #[serde(default, skip_serializing_if = "is_default")]
         compose_file: String,
     },
+}
+
+fn is_default<T: Default + PartialEq>(t: &T) -> bool {
+    *t == Default::default()
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+pub struct CommonTask {
+    #[serde(default, skip_serializing_if = "is_default")]
+    name: String,
+    #[serde(default, skip_serializing_if = "is_default")]
+    retries: u8,
+}
+
+impl CommonTask {
+    #[cfg(test)]
+    pub fn new() -> Self {
+        Default::default()
+    }
 }
 
 impl Manifest {
@@ -59,15 +77,18 @@ mod tests {
             team: "my-team".to_string(),
             tasks: vec![
                 Task::Run {
-                    name: "build".to_string(),
+                    common: CommonTask {
+                        name: "build".to_string(),
+                        ..Default::default()
+                    },
                     script: "./build".to_string(),
                 },
                 Task::Run {
-                    name: "".to_string(),
+                    common: CommonTask::new(),
                     script: "./test".to_string(),
                 },
                 Task::DockerCompose {
-                    name: "".to_string(),
+                    common: CommonTask::new(),
                     compose_file: "".to_string(),
                 },
             ],
