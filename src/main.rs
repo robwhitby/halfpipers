@@ -20,9 +20,10 @@ struct Args {
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     let raw_manifest = std::fs::read_to_string(&args.path)?;
-    let manifest = Manifest::from_string(&raw_manifest)?;
+    let manifest = Manifest::from_yaml(&raw_manifest)?;
+    let yaml = manifest.to_yaml()?;
 
-    println!("pipeline = {}, team = {}", manifest.pipeline, manifest.team);
+    println!("{}", yaml);
 
     Ok(())
 }

@@ -1,20 +1,20 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub struct Manifest {
     pub pipeline: String,
     pub team: String,
     pub tasks: Vec<Task>,
 }
 
-#[derive(Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 #[serde(tag = "type")]
 #[serde(rename_all = "kebab-case")]
 pub enum Task {
     Run {
         #[serde(default)]
         name: String,
-        command: String,
+        script: String,
     },
     DockerCompose {
         #[serde(default)]
@@ -25,9 +25,14 @@ pub enum Task {
 }
 
 impl Manifest {
-    pub fn from_string(raw_manifest: &String) -> Result<Manifest, serde_yaml::Error> {
+    pub fn from_yaml(raw_manifest: &String) -> Result<Manifest, serde_yaml::Error> {
         let manifest: Manifest = serde_yaml::from_str(&raw_manifest)?;
         Ok(manifest)
+    }
+
+    pub fn to_yaml(&self) -> Result<String, serde_yaml::Error> {
+        let yaml = serde_yaml::to_string(self)?;
+        Ok(yaml)
     }
 }
 
@@ -55,11 +60,11 @@ mod tests {
             tasks: vec![
                 Task::Run {
                     name: "build".to_string(),
-                    command: "./build".to_string(),
+                    script: "./build".to_string(),
                 },
                 Task::Run {
                     name: "".to_string(),
-                    command: "./test".to_string(),
+                    script: "./test".to_string(),
                 },
                 Task::DockerCompose {
                     name: "".to_string(),
@@ -68,14 +73,14 @@ mod tests {
             ],
         };
 
-        assert_eq!(expected, Manifest::from_string(&input.to_string()).unwrap());
+        assert_eq!(expected, Manifest::from_yaml(&input.to_string()).unwrap());
     }
 
     #[test]
     fn sad_yaml() {
         let input = String::from("some rubbish");
 
-        let err = Manifest::from_string(&input).unwrap_err();
+        let err = Manifest::from_yaml(&input).unwrap_err();
         assert!(err.to_string().contains("invalid type"));
     }
 
@@ -85,7 +90,7 @@ mod tests {
         pipeline: my-pipe
         ";
 
-        let err = Manifest::from_string(&input.to_string()).unwrap_err();
+        let err = Manifest::from_yaml(&input.to_string()).unwrap_err();
         assert!(err.to_string().contains("missing field `team`"));
     }
 }
