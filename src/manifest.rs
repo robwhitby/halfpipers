@@ -7,23 +7,23 @@ pub struct Manifest {
     pub tasks: Vec<Task>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum Task {
     Run {
+        script: String,
         #[serde(flatten)]
         common: CommonTask,
-        script: String,
     },
     DockerCompose {
-        #[serde(flatten)]
-        common: CommonTask,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         compose_file: Option<String>,
+        #[serde(flatten)]
+        common: CommonTask,
     },
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
 pub struct CommonTask {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     name: Option<String>,
@@ -50,63 +50,119 @@ mod tests {
     use super::*;
 
     #[test]
-    fn happy() {
+    fn top_level() {
         let input = "
-        pipeline: my-pipe
-        team: my-team
-        tasks: 
-        - type: run
-          name: build
-          script: ./build
-        - type: run
-          script: ./test
-          name: ''
-        - type: docker-compose
+        pipeline: p
+        team: t
+        tasks: []
         ";
 
-        let expected = Manifest {
-            pipeline: "my-pipe".to_string(),
-            team: "my-team".to_string(),
-            tasks: vec![
-                Task::Run {
-                    common: CommonTask {
-                        name: Some("build".to_string()),
-                        ..Default::default()
-                    },
-                    script: "./build".to_string(),
-                },
-                Task::Run {
-                    common: CommonTask {
-                        name: Some("".to_string()),
-                        ..Default::default()
-                    },
-                    script: "./test".to_string(),
-                },
-                Task::DockerCompose {
-                    common: Default::default(),
-                    compose_file: None,
-                },
-            ],
-        };
-
-        assert_eq!(expected, Manifest::from_yaml(&input.to_string()).unwrap());
-    }
-
-    #[test]
-    fn sad_yaml() {
-        let input = String::from("some rubbish");
-
-        let err = Manifest::from_yaml(&input).unwrap_err();
-        assert!(err.to_string().contains("invalid type"));
+        let manifest = Manifest::from_yaml(&input.to_string()).unwrap();
+        assert_eq!(manifest.pipeline, "p");
+        assert_eq!(manifest.team, "t");
     }
 
     #[test]
     fn missing_field() {
         let input = "
-        pipeline: my-pipe
+        pipeline: p
         ";
 
         let err = Manifest::from_yaml(&input.to_string()).unwrap_err();
         assert!(err.to_string().contains("missing field `team`"));
+    }
+
+    #[test]
+    fn all_task_types() {
+        let input = "
+        pipeline: p
+        team: t
+        tasks: 
+        - type: run
+          script: s
+        - type: docker-compose
+        ";
+
+        let tasks = Manifest::from_yaml(&input.to_string()).unwrap().tasks;
+        assert!(matches!(tasks.get(0).unwrap(), Task::Run { .. }));
+        assert!(matches!(tasks.get(1).unwrap(), Task::DockerCompose { .. }));
+    }
+
+    fn get_task(task_input: &str) -> Task {
+        let input = format!(
+            "
+        pipeline: p
+        team: t
+        tasks:
+        {}",
+            task_input
+        );
+
+        Manifest::from_yaml(&input.to_string())
+            .unwrap()
+            .tasks
+            .first()
+            .unwrap()
+            .clone()
+    }
+
+    #[test]
+    fn task_run() {
+        let input = "
+        - type: run
+          script: s
+        ";
+
+        let expected = Task::Run {
+            script: "s".to_string(),
+            common: Default::default(),
+        };
+
+        assert_eq!(get_task(&input), expected)
+    }
+
+    #[test]
+    fn task_docker_compose() {
+        let input = "
+        - type: docker-compose
+          compose_file: cf
+        ";
+
+        let expected = Task::DockerCompose {
+            compose_file: Some("cf".to_string()),
+            common: Default::default(),
+        };
+
+        assert_eq!(get_task(&input), expected)
+    }
+
+    #[test]
+    fn task_common() {
+        let input = "
+        - type: run
+          name: n
+          script: s
+          retries: 1
+          timeout: t
+        ";
+
+        let expected = Task::Run {
+            script: "s".to_string(),
+            common: CommonTask {
+                name: Some("n".to_string()),
+                retries: Some(1),
+                timeout: Some("t".to_string()),
+            },
+        };
+
+        assert_eq!(get_task(&input), expected)
+    }
+
+    #[test]
+    fn invalid_yaml() {
+        let input = String::from("some rubbish");
+
+        let err = Manifest::from_yaml(&input).unwrap_err();
+        assert!(err.to_string().contains("invalid type"));
     }
 }
