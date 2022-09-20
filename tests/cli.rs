@@ -10,9 +10,7 @@ fn missing_file() -> Result<(), Box<dyn Error>> {
     let mut cmd = Command::cargo_bin("halfpipers")?;
 
     cmd.arg("-i").arg("missing-file");
-    cmd.assert()
-        .failure()
-        .stderr(contains("No such file or directory"));
+    cmd.assert().failure().stderr(contains("No such file or directory"));
 
     Ok(())
 }

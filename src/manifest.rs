@@ -98,12 +98,7 @@ mod tests {
             task_input
         );
 
-        Manifest::from_yaml(&input.to_string())
-            .unwrap()
-            .tasks
-            .first()
-            .unwrap()
-            .clone()
+        Manifest::from_yaml(&input.to_string()).unwrap().tasks.first().unwrap().clone()
     }
 
     #[test]
