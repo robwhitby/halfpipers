@@ -7,10 +7,7 @@ pub struct Linter {
 
 impl Linter {
     pub fn new() -> Self {
-        Self::with_rules(vec![
-            team_must_not_contain_spaces,
-            pipeline_should_be_lowercase,
-        ])
+        Self::with_rules(vec![team_must_not_contain_spaces, pipeline_should_be_lowercase])
     }
 
     pub fn with_rules(rules: Vec<Rule>) -> Self {
@@ -20,6 +17,19 @@ impl Linter {
     pub fn lint(&self, manifest: &Manifest) -> Vec<Issue> {
         self.rules.iter().flat_map(|r| r(manifest)).collect()
     }
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Issue {
+    Warning(String),
+    Error(String),
+}
+
+pub fn contains_error(issues: &Vec<Issue>) -> bool {
+    issues.iter().any(|i| match i {
+        Issue::Error(_) => true,
+        _ => false,
+    })
 }
 
 #[cfg(test)]

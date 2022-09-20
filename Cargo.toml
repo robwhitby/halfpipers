@@ -10,6 +10,7 @@ description = "Pipeline renderer extraordinaire"
 clap = { version = "3.0", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"
+colored = "2"
 
 [dev-dependencies]
 assert_cmd = "2.0"

@@ -1,12 +1,6 @@
-use crate::Manifest;
+use crate::{Issue, Manifest};
 
 pub type Rule = fn(m: &Manifest) -> Option<Issue>;
-
-#[derive(Debug, PartialEq)]
-pub enum Issue {
-    Warning(String),
-    Error(String),
-}
 
 pub fn team_must_not_contain_spaces(manifest: &Manifest) -> Option<Issue> {
     if manifest.team.contains(" ") {
