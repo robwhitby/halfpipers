@@ -1,6 +1,8 @@
+mod lint_rules;
 mod linter;
 mod manifest;
 
+use crate::lint_rules::Issue;
 use crate::linter::Linter;
 use clap::Parser;
 use manifest::Manifest;
@@ -28,18 +30,20 @@ fn main() -> Result<(), Box<dyn Error>> {
     let manifest = Manifest::from_yaml(&raw_manifest)?;
 
     let linter = Linter::new();
-    let lint_results = linter.lint(&manifest);
+    let lint_issues = linter.lint(&manifest);
 
-    for s in &lint_results.errors {
-        eprintln!("  [error] {}", s)
+    let mut has_errors = false;
+    for issue in lint_issues {
+        match issue {
+            Issue::Error(s) => {
+                eprintln!("  [error] {}", s);
+                has_errors = true;
+            }
+            Issue::Warning(s) => eprintln!("[warning] {}", s),
+        }
     }
 
-    lint_results
-        .warnings
-        .iter()
-        .for_each(|s| eprintln!("[warning] {}", s));
-
-    if lint_results.has_errors() {
+    if has_errors {
         process::exit(1)
     }
 
