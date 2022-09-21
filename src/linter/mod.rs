@@ -3,6 +3,10 @@ mod rules;
 use crate::linter::rules::*;
 use crate::Manifest;
 
+pub trait Linterer {
+    fn lint(&self, manifest: &Manifest) -> Vec<Issue>;
+}
+
 pub struct Linter {
     rules: Vec<Rule>,
 }
@@ -15,8 +19,10 @@ impl Linter {
     pub fn with_rules(rules: Vec<Rule>) -> Self {
         Self { rules }
     }
+}
 
-    pub fn lint(&self, manifest: &Manifest) -> Vec<Issue> {
+impl Linterer for Linter {
+    fn lint(&self, manifest: &Manifest) -> Vec<Issue> {
         self.rules.iter().flat_map(|r| r(manifest)).collect()
     }
 }
