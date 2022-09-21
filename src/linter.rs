@@ -19,17 +19,32 @@ impl Linter {
     }
 }
 
+pub trait ContainsError {
+    fn contains_error(&self) -> bool;
+}
+
+impl ContainsError for Vec<Issue> {
+    fn contains_error(&self) -> bool {
+        self.iter().any(|i| match i {
+            Issue::Error(_) => true,
+            _ => false,
+        })
+    }
+}
+
 #[derive(Debug, PartialEq)]
 pub enum Issue {
     Warning(String),
     Error(String),
 }
 
-pub fn contains_error(issues: &Vec<Issue>) -> bool {
-    issues.iter().any(|i| match i {
-        Issue::Error(_) => true,
-        _ => false,
-    })
+impl Issue {
+    pub fn error(s: &str) -> Issue {
+        Self::Error(s.to_string())
+    }
+    pub fn warning(s: &str) -> Issue {
+        Self::Warning(s.to_string())
+    }
 }
 
 #[cfg(test)]
@@ -38,8 +53,8 @@ mod tests {
 
     #[test]
     fn happy() {
-        let rule1: Rule = |_| Some(Issue::Error("rule1".to_string()));
-        let rule2: Rule = |_| Some(Issue::Warning("rule2".to_string()));
+        let rule1: Rule = |_| Some(Issue::error("rule1"));
+        let rule2: Rule = |_| Some(Issue::warning("rule2"));
         let rule3: Rule = |_| None;
 
         let linter = Linter::with_rules(vec![rule1, rule2, rule3]);
@@ -53,7 +68,8 @@ mod tests {
         let issues = linter.lint(&manifest);
 
         assert_eq!(issues.len(), 2);
-        assert_eq!(issues.get(0).unwrap(), &Issue::Error("rule1".to_string()));
-        assert_eq!(issues.get(1).unwrap(), &Issue::Warning("rule2".to_string()));
+        assert!(issues.contains_error());
+        assert_eq!(issues.get(0).unwrap(), &Issue::error("rule1"));
+        assert_eq!(issues.get(1).unwrap(), &Issue::warning("rule2"));
     }
 }

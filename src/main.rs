@@ -34,7 +34,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         }
     }
 
-    if contains_error(&lint_issues) {
+    if lint_issues.contains_error() {
         process::exit(1)
     }
 
