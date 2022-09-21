@@ -46,7 +46,7 @@ pub struct CommonTask {
 
 impl Manifest {
     pub fn from_yaml(raw_manifest: &String) -> Result<Manifest, serde_yaml::Error> {
-        let manifest: Manifest = serde_yaml::from_str(&raw_manifest)?;
+        let manifest: Manifest = serde_yaml::from_str(raw_manifest)?;
         Ok(manifest)
     }
 

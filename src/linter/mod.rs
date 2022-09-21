@@ -28,10 +28,7 @@ pub trait ContainsError {
 
 impl ContainsError for Vec<Issue> {
     fn contains_error(&self) -> bool {
-        self.iter().any(|i| match i {
-            Issue::Error(_) => true,
-            _ => false,
-        })
+        self.iter().any(|i| matches!(i, Issue::Error { .. }))
     }
 }
 
@@ -55,7 +52,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn happy() {
+    fn applies_rules() {
         let rule1: Rule = |_, _| Some(Issue::error("rule1"));
         let rule2: Rule = |_, _| Some(Issue::warning("rule2"));
         let rule3: Rule = |_, _| None;
@@ -71,8 +68,14 @@ mod tests {
         let issues = linter.lint(&manifest);
 
         assert_eq!(issues.len(), 2);
-        assert!(issues.contains_error());
         assert_eq!(issues.get(0).unwrap(), &Issue::error("rule1"));
         assert_eq!(issues.get(1).unwrap(), &Issue::warning("rule2"));
+    }
+
+    #[test]
+    fn contains_error() {
+        assert!(vec![Issue::warning(""), Issue::error("")].contains_error());
+        assert!(!vec![Issue::warning("")].contains_error());
+        assert!(!vec![].contains_error());
     }
 }
