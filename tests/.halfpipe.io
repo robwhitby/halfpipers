@@ -1,5 +1,5 @@
 pipeline: Pipeline-name
-team: Halfpipe team
+team: ttt
 tasks:
 - type: run
   name: my run task

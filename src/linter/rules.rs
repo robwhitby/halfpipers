@@ -1,8 +1,8 @@
-use crate::{Issue, Manifest};
+use crate::{Env, Issue, Manifest};
 
-pub type Rule = fn(m: &Manifest) -> Option<Issue>;
+pub type Rule = fn(&Env, &Manifest) -> Option<Issue>;
 
-pub fn team_must_not_contain_spaces(manifest: &Manifest) -> Option<Issue> {
+pub fn team_must_not_contain_spaces(_env: &Env, manifest: &Manifest) -> Option<Issue> {
     if manifest.team.contains(" ") {
         Some(Issue::error("team must not contain spaces"))
     } else {
@@ -10,7 +10,7 @@ pub fn team_must_not_contain_spaces(manifest: &Manifest) -> Option<Issue> {
     }
 }
 
-pub fn pipeline_should_be_lowercase(manifest: &Manifest) -> Option<Issue> {
+pub fn pipeline_should_be_lowercase(_env: &Env, manifest: &Manifest) -> Option<Issue> {
     if manifest.pipeline != manifest.pipeline.to_lowercase() {
         Some(Issue::warning("pipeline should be lowercase"))
     } else {
@@ -22,41 +22,33 @@ pub fn pipeline_should_be_lowercase(manifest: &Manifest) -> Option<Issue> {
 mod tests {
     use super::*;
 
-    fn empty_manifest() -> Manifest {
-        Manifest {
-            pipeline: "".to_string(),
-            team: "".to_string(),
-            tasks: vec![],
-        }
-    }
-
     #[test]
     fn team_name() {
         let bad = Manifest {
             team: "team name".to_string(),
-            ..empty_manifest()
+            ..Manifest::new()
         };
-        assert!(matches!(team_must_not_contain_spaces(&bad), Some(Issue::Error(..))));
+        assert!(matches!(team_must_not_contain_spaces(&Env::new(), &bad), Some(Issue::Error(..))));
 
         let good = Manifest {
             team: "team-name".to_string(),
-            ..empty_manifest()
+            ..Manifest::new()
         };
-        assert_eq!(team_must_not_contain_spaces(&good), None);
+        assert_eq!(team_must_not_contain_spaces(&Env::new(), &good), None);
     }
 
     #[test]
     fn pipeline_name() {
         let bad = Manifest {
             pipeline: "Pipeline Name".to_string(),
-            ..empty_manifest()
+            ..Manifest::new()
         };
-        assert!(matches!(pipeline_should_be_lowercase(&bad), Some(Issue::Warning(..))));
+        assert!(matches!(pipeline_should_be_lowercase(&Env::new(), &bad), Some(Issue::Warning(..))));
 
         let good = Manifest {
             pipeline: "pipeline name".to_string(),
-            ..empty_manifest()
+            ..Manifest::new()
         };
-        assert_eq!(pipeline_should_be_lowercase(&good), None);
+        assert_eq!(pipeline_should_be_lowercase(&Env::new(), &good), None);
     }
 }

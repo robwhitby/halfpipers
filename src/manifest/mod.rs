@@ -7,6 +7,17 @@ pub struct Manifest {
     pub tasks: Vec<Task>,
 }
 
+impl Manifest {
+    #[cfg(test)]
+    pub fn new() -> Manifest {
+        Manifest {
+            pipeline: "".to_string(),
+            team: "".to_string(),
+            tasks: vec![],
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum Task {

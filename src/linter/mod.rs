@@ -1,23 +1,24 @@
 mod rules;
 
 use crate::linter::rules::*;
-use crate::Manifest;
+use crate::{Env, Manifest};
 
 pub struct Linter {
+    env: Env,
     rules: Vec<Rule>,
 }
 
 impl Linter {
-    pub fn new() -> Self {
-        Self::with_rules(vec![team_must_not_contain_spaces, pipeline_should_be_lowercase])
+    pub fn new(env: &Env) -> Self {
+        Self::with_rules(env, vec![team_must_not_contain_spaces, pipeline_should_be_lowercase])
     }
 
-    pub fn with_rules(rules: Vec<Rule>) -> Self {
-        Self { rules }
+    pub fn with_rules(env: &Env, rules: Vec<Rule>) -> Self {
+        Self { env: env.clone(), rules }
     }
 
     pub fn lint(&self, manifest: &Manifest) -> Vec<Issue> {
-        self.rules.iter().flat_map(|r| r(manifest)).collect()
+        self.rules.iter().flat_map(|r| r(&self.env, manifest)).collect()
     }
 }
 
@@ -55,11 +56,11 @@ mod tests {
 
     #[test]
     fn happy() {
-        let rule1: Rule = |_| Some(Issue::error("rule1"));
-        let rule2: Rule = |_| Some(Issue::warning("rule2"));
-        let rule3: Rule = |_| None;
+        let rule1: Rule = |_, _| Some(Issue::error("rule1"));
+        let rule2: Rule = |_, _| Some(Issue::warning("rule2"));
+        let rule3: Rule = |_, _| None;
 
-        let linter = Linter::with_rules(vec![rule1, rule2, rule3]);
+        let linter = Linter::with_rules(&Env::new(), vec![rule1, rule2, rule3]);
 
         let manifest = Manifest {
             pipeline: "Pipeline".to_string(),

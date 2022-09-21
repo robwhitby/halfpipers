@@ -1,9 +1,11 @@
+mod env;
 mod linter;
 mod manifest;
 
-use crate::linter::*;
 use clap::Parser;
 use colored::*;
+use env::Env;
+use linter::*;
 use manifest::Manifest;
 use std::error::Error;
 use std::fs::read_to_string;
@@ -19,11 +21,13 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let raw_manifest = read_to_string(&args.path)?;
+    let env = Env::new();
+    eprintln!("{}", env); //just trying out Display trait
 
+    let raw_manifest = read_to_string(&args.path)?;
     let manifest = Manifest::from_yaml(&raw_manifest)?;
 
-    let linter = Linter::new();
+    let linter = Linter::new(&env);
     let lint_issues = linter.lint(&manifest);
 
     for issue in &lint_issues {
