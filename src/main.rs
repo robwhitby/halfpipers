@@ -22,22 +22,20 @@ struct Args {
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     let env = Env::new();
-    eprintln!("{}", env); //just trying out Display trait
 
     let raw_manifest = read_to_string(&args.path)?;
     let manifest = Manifest::from_yaml(&raw_manifest)?;
 
-    let linter = Linter::new(&env);
-    let lint_issues = linter.lint(&manifest);
+    let issues = Linter::new().lint(&env, &manifest);
 
-    for issue in &lint_issues {
+    for issue in &issues {
         match issue {
             Issue::Error(s) => eprintln!("{} {}", "  [error]".red(), s),
             Issue::Warning(s) => eprintln!("{} {}", "[warning]".yellow(), s),
         }
     }
 
-    if lint_issues.contains_error() {
+    if issues.contains_error() {
         process::exit(1)
     }
 

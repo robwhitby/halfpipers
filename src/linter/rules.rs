@@ -2,6 +2,8 @@ use crate::{Env, Issue, Manifest};
 
 pub type Rule = fn(&Env, &Manifest) -> Option<Issue>;
 
+pub type Rules = Vec<Rule>;
+
 pub fn team_must_not_contain_spaces(_env: &Env, manifest: &Manifest) -> Option<Issue> {
     if manifest.team.contains(' ') {
         Some(Issue::error("team must not contain spaces"))

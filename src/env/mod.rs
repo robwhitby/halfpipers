@@ -2,15 +2,15 @@ use std::fmt;
 
 #[derive(Clone)]
 pub struct Env {
-    path: String,
-    git_root: String,
+    pub path: String,
+    pub git_root: String,
 }
 
 impl Env {
     pub fn new() -> Self {
         Self {
-            path: "app".to_string(),
-            git_root: "/my/monorepo".to_string(),
+            path: "".to_string(),
+            git_root: "".to_string(),
         }
     }
 }
