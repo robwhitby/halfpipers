@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Manifest {
     pub pipeline: String,
     pub team: String,
@@ -18,7 +18,7 @@ impl Manifest {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum Task {
     Run {
@@ -34,7 +34,7 @@ pub enum Task {
     },
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Default, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default, Clone)]
 pub struct CommonTask {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     name: Option<String>,
@@ -45,7 +45,7 @@ pub struct CommonTask {
 }
 
 impl Manifest {
-    pub fn from_yaml(raw_manifest: &String) -> Result<Manifest, serde_yaml::Error> {
+    pub fn from_yaml(raw_manifest: &str) -> Result<Manifest, serde_yaml::Error> {
         let manifest: Manifest = serde_yaml::from_str(raw_manifest)?;
         Ok(manifest)
     }

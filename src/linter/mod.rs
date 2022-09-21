@@ -32,7 +32,7 @@ impl ContainsError for Vec<Issue> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Issue {
     Warning(String),
     Error(String),
