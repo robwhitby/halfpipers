@@ -18,13 +18,13 @@ struct Args {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let app = App::new(Box::new(Linter::new()));
     let args = Args::parse();
-
     let raw_manifest = read_to_string(&args.path)?;
+
     let manifest = Manifest::from_yaml(&raw_manifest)?;
 
-    let lint_issues = app.linter.lint(&manifest);
+    let linter = Linter::new();
+    let lint_issues = linter.lint(&manifest);
 
     for issue in &lint_issues {
         match issue {
@@ -41,14 +41,4 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("{}", yaml);
 
     Ok(())
-}
-
-struct App {
-    linter: Box<dyn Linterer + 'static>,
-}
-
-impl App {
-    fn new(linter: Box<dyn Linterer + 'static>) -> Self {
-        Self { linter }
-    }
 }
