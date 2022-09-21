@@ -1,4 +1,6 @@
-use crate::lint_rules::*;
+mod rules;
+
+use crate::linter::rules::*;
 use crate::Manifest;
 
 pub struct Linter {

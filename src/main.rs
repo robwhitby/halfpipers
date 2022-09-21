@@ -1,4 +1,3 @@
-mod lint_rules;
 mod linter;
 mod manifest;
 
