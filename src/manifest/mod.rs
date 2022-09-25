@@ -21,17 +21,23 @@ impl Manifest {
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 #[serde(tag = "type", rename_all = "kebab-case")]
 pub enum Task {
-    Run {
-        script: String,
-        #[serde(flatten)]
-        common: CommonTask,
-    },
-    DockerCompose {
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        compose_file: Option<String>,
-        #[serde(flatten)]
-        common: CommonTask,
-    },
+    Run(Run),
+    DockerCompose(DockerCompose),
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct Run {
+    script: String,
+    #[serde(flatten)]
+    common: CommonTask,
+}
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct DockerCompose {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    compose_file: Option<String>,
+    #[serde(flatten)]
+    common: CommonTask,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default, Clone)]
@@ -119,12 +125,12 @@ mod tests {
           script: s
         ";
 
-        let expected = Task::Run {
+        let expected = Run {
             script: "s".to_string(),
             common: Default::default(),
         };
 
-        assert_eq!(get_task(&input), expected)
+        assert_eq!(get_task(&input), Task::Run(expected))
     }
 
     #[test]
@@ -134,12 +140,12 @@ mod tests {
           compose_file: cf
         ";
 
-        let expected = Task::DockerCompose {
+        let expected = DockerCompose {
             compose_file: Some("cf".to_string()),
             common: Default::default(),
         };
 
-        assert_eq!(get_task(&input), expected)
+        assert_eq!(get_task(&input), Task::DockerCompose(expected))
     }
 
     #[test]
@@ -152,7 +158,7 @@ mod tests {
           timeout: t
         ";
 
-        let expected = Task::Run {
+        let expected = Run {
             script: "s".to_string(),
             common: CommonTask {
                 name: Some("n".to_string()),
@@ -161,7 +167,7 @@ mod tests {
             },
         };
 
-        assert_eq!(get_task(&input), expected)
+        assert_eq!(get_task(&input), Task::Run(expected))
     }
 
     #[test]

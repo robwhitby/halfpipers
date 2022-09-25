@@ -1,4 +1,5 @@
-use crate::{Env, Issue, Manifest};
+use crate::linter::issue::Issue;
+use crate::{Env, Manifest};
 
 pub type Rule = fn(&Env, &Manifest) -> Option<Issue>;
 

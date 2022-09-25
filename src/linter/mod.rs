@@ -1,13 +1,13 @@
+mod issue;
 mod rules;
 
 use crate::linter::rules::*;
 use crate::{Env, Manifest};
+pub use issue::{ContainsError, Issue, Issues};
 
 pub struct Linter {
     rules: Rules,
 }
-
-pub type Issues = Vec<Issue>;
 
 impl Linter {
     pub fn new() -> Self {
@@ -23,34 +23,11 @@ impl Linter {
     }
 }
 
-pub trait ContainsError {
-    fn contains_error(&self) -> bool;
-}
-
-impl ContainsError for Issues {
-    fn contains_error(&self) -> bool {
-        self.iter().any(|i| matches!(i, Issue::Error { .. }))
-    }
-}
-
-#[derive(Debug, PartialEq, Eq)]
-pub enum Issue {
-    Warning(String),
-    Error(String),
-}
-
-impl Issue {
-    pub fn error(s: &str) -> Issue {
-        Self::Error(s.to_string())
-    }
-    pub fn warning(s: &str) -> Issue {
-        Self::Warning(s.to_string())
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::linter::rules::Rule;
+    use issue::*;
 
     #[test]
     fn applies_rules() {
@@ -74,12 +51,5 @@ mod tests {
         assert_eq!(issues.len(), 2);
         assert_eq!(issues.get(0).unwrap(), &Issue::error("/path pipe"));
         assert_eq!(issues.get(1).unwrap(), &Issue::warning("rule2"));
-    }
-
-    #[test]
-    fn contains_error() {
-        assert!(vec![Issue::warning(""), Issue::error("")].contains_error());
-        assert!(!vec![Issue::warning("")].contains_error());
-        assert!(!vec![].contains_error());
     }
 }
