@@ -9,6 +9,10 @@ pub struct Linter {
     rules: Rules,
 }
 
+pub trait Lint {
+    fn lint(&self, env: &Env, manifest: &Manifest) -> Issues;
+}
+
 impl Linter {
     pub fn new() -> Self {
         Self::with_rules(vec![team_must_not_contain_spaces, pipeline_should_be_lowercase])
@@ -17,8 +21,10 @@ impl Linter {
     pub fn with_rules(rules: Rules) -> Self {
         Self { rules }
     }
+}
 
-    pub fn lint(&self, env: &Env, manifest: &Manifest) -> Issues {
+impl Lint for Linter {
+    fn lint(&self, env: &Env, manifest: &Manifest) -> Issues {
         self.rules.iter().flat_map(|r| r(env, manifest)).collect()
     }
 }
